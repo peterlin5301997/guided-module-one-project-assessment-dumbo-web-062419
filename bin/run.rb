@@ -1,6 +1,7 @@
 require_relative '../config/environment'
 require "tty-prompt"
 require "colorize"
+require "geocoder"
 require "pry"
 
 class CommandLineInterface
@@ -83,7 +84,7 @@ class CommandLineInterface
     def register
         registered = false
         while registered == false
-            user_name = @prompt.ask("What is your name?", default: "User")
+            user_name = @prompt.ask("Register - What is your name?", default: "User")
             user = User.find_by(name: user_name)
             if user != nil # if user exists in DB
                 puts "You ain't no #{user_name}. (Name is taken. Please enter another name.)".red
@@ -125,6 +126,7 @@ class CommandLineInterface
                     menu.choice name: city.name, value: city
                 end
             end
+
             if user_city_from == user_city_to
                 puts "You're too high, #{@user.name}. You already there!".yellow
             else
@@ -133,6 +135,14 @@ class CommandLineInterface
                 booked = true
             end
         end
+    end
+
+    def trip_distance_miles(trip)
+        Geocoder::Calculations.distance_between([trip.city_from.lat, trip.city_from.lon], [trip.city_to.lat, trip.city_to.lon]).to_i
+    end
+
+    def total_user_distance
+        @user.trips.sum{|trip| trip_distance_miles(trip)}
     end
 
     def edit_trip
@@ -169,14 +179,17 @@ class CommandLineInterface
     end
 
     def display_trip_list
+        puts "\n\nYou will travel #{total_user_distance} miles".green
         if @user.trips.length == 0
-            puts "You Trippin' Dawg. You Don't Got Any Trips Booked!".red
+            puts "\n\nYou Trippin' Dawg. You Don't Got Any Trips Booked!".red.bold
+            puts "\n\nYou've traveled #{total_user_distance}"
         else
-            puts "Here's Yo List of Trips: "
+            puts "\n\n#{@user.name}".yellow.bold + ", Here's Yo List of Trips: "
             @user.trips.each_with_index do |trip, i|
-                puts "Trip #{i + 1} - FROM: #{trip.city_from.name} TO: #{trip.city_to.name}"
+                puts "Trip #{i + 1} - FROM: #{trip.city_from.name} TO: #{trip.city_to.name} - #{trip_distance_miles(trip)} miles".yellow.bold
             end
         end
+        puts "\n\n"
     end
     
     def cancel_trip

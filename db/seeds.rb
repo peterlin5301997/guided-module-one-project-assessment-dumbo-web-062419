@@ -1,7 +1,9 @@
 require 'rest-client'
 require 'json'
 
-
+City.delete_all
+Trip.delete_all
+User.delete_all
 latitude = (35..50).to_a
 longitude = (-120..-75).to_a
 arr_cities = []
@@ -12,10 +14,11 @@ arr_cities = []
     )
     city_hash = JSON.parse(response)
     if city_hash != []
-        arr_cities << city_hash.sample["city"]
+    		city_to_add = city_hash.sample
+        arr_cities << {name: city_to_add["city"], lat: city_to_add["latitude"], lon: city_to_add["longitude"]}
     end
 end
 
 arr_cities.each do |city|
-    City.create(name: city)
+    City.create(name: city[:name], lat: city[:lat], lon: city[:lon])
 end
