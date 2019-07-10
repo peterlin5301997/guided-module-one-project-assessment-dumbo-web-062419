@@ -8,6 +8,7 @@ class CommandLineInterface
     def initialize
         @prompt = TTY::Prompt.new
         @user = nil
+        pid = fork{ exec 'afplay', "The_Next_Episode_Instrumental.mp3"}
         puts "                                                  
                                                         :-                        
                                                         o+                        
@@ -55,7 +56,9 @@ class CommandLineInterface
                           $$ |     $$ |     \\$$$$$$  |                                                                
                           \\__|     \\__|      \\______/                                                                 
         ".yellow
-        puts "                                      P L A N N I N G    T R I P S    L I K E    Y O U ' R E    H I G H ! ! ! !".green
+        puts "                                                P L A N N I N G    T R I P S    L I K E    Y O U ' R E    H I G H !
+        
+        ".green
     end
 
     def account_menu
@@ -95,13 +98,14 @@ class CommandLineInterface
     def get_user_menu_selection
         done = false
         while done != true do 
-            @prompt.select("What's hookup you lookin' for?") do |menu|
+            @prompt.select("What's the hookup you lookin' for?") do |menu|
                 menu.choice "Book Trip", -> { book_trip }
                 menu.choice "Edit Trip", -> { edit_trip }
                 menu.choice "Display Trip List", -> { display_trip_list }
                 menu.choice "Cancel Trip", -> { cancel_trip }
                 menu.choice "EXIT", -> { 
-                    puts "Stay safe. You gon' trip.".yellow
+                    puts "Stay safe. Don't trip.".yellow
+                    pid = fork{ exec 'killall', "afplay" }
                     done = true 
                 }
             end
@@ -168,7 +172,7 @@ class CommandLineInterface
         if @user.trips.length == 0
             puts "You Trippin' Dawg. You Don't Got Any Trips Booked!".red
         else
-            puts "#{@user.name}, Here's Yo List of Trips: "
+            puts "Here's Yo List of Trips: "
             @user.trips.each_with_index do |trip, i|
                 puts "Trip #{i + 1} - FROM: #{trip.city_from.name} TO: #{trip.city_to.name}"
             end
