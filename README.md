@@ -24,11 +24,11 @@ Although we make sure that our program  has no profanity, it can still be unsafe
 
 3. After you have logged in to our system, you will be prompted with our main menu options:
 
-    1) Book a Trip
-    2) Edit a Trip
-    3) Show All Your Trips
-    4) Cancel a Trip
-    5) Exit the program
+    1. Book a Trip
+    2. Edit a Trip
+    3. Show All Your Trips
+    4. Cancel a Trip
+    5. Exit the program
 
 ** Please book a trip if you have not made any **
 
@@ -36,8 +36,8 @@ Although we make sure that our program  has no profanity, it can still be unsafe
 
 5. 'Edit a Trip' will display your list of trips and allow you to select a trip to edit. Next, you will have to choose which option to change:
 
-    1) City you depart FROM
-    2) City you travel TO
+    1. City you depart FROM
+    2. City you travel TO
 
 Then, you will pick a new city you want to change it to.
 
