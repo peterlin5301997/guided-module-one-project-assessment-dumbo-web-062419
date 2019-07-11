@@ -94,7 +94,7 @@ class CommandLineInterface
                         logged_in = true
                     }
                     option.choice "No", -> { 
-                        puts "\nGet outta here!\n".red.bold
+                        puts "\nG E T   O U T T A    H E R E !\n".red.bold
                         fork{ exec 'killall', "afplay"}
                         exit
                     }
@@ -300,7 +300,7 @@ class CommandLineInterface
     def exit_program
         system "clear"
         marijuana
-        puts "\n\t\t\t\t\t\tStay safe. Don't trip.\n".yellow.bold
+        puts "\n\t\t\t\t\t\tStay safe. Don't trip.\n".yellow
         fork{ exec 'killall', "afplay" }
         sleep(0.1.seconds)
         fork{ exec 'afplay', "audio/Smoke_Weed_Everyday.mp3"}
