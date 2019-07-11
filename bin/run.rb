@@ -94,7 +94,7 @@ class CommandLineInterface
                         logged_in = true
                     }
                     option.choice "No", -> { 
-                        puts "\nGet outta here!\n".red
+                        puts "\nGet outta here!\n".red.bold
                         fork{ exec 'killall', "afplay"}
                         exit
                     }
@@ -140,9 +140,26 @@ class CommandLineInterface
         end
     end
 
+    def show_top_trips
+    	top_dest = Trip.group(:city_to).count
+      if top_dest.length >= 5
+        top_dest = top_dest.sort{|t1, t2| t2[1] <=> t1[1]}[0..4]
+        puts "Top 5 Destinations:"
+      else
+      	puts "Top Destinations:"
+      end
+      top_dest.each_with_index do |trip, i|
+      	puts "#{i + 1}. #{trip[0].name}"
+      end
+      puts "\n"
+    end
+
     def book_trip
         system "clear"
         puts "===== BOOK TRIP =====\n\n".yellow
+        if Trip.all.length > 0
+        	show_top_trips
+        end
         booked = false
         while booked != true do 
             user_city_from = @prompt.select("What city you located at?") do |menu|
@@ -224,6 +241,7 @@ class CommandLineInterface
         else
             chosen_trip.city_to = new_city
         end
+        chosen_trip.save
         puts "\nYou got it, #{@user.name}.\n".green
     end
 
@@ -276,7 +294,7 @@ class CommandLineInterface
     def exit_program
         system "clear"
         marijuana
-        puts "\n\t\t\t\t\t\tStay safe. Don't trip.\n".yellow
+        puts "\n\t\t\t\t\t\tStay safe. Don't trip.\n".yellow.bold
         fork{ exec 'killall', "afplay" }
         sleep(0.1.seconds)
         fork{ exec 'afplay', "audio/Smoke_Weed_Everyday.mp3"}
