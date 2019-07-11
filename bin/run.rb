@@ -145,23 +145,28 @@ class CommandLineInterface
         puts "===== BOOK TRIP =====\n\n".yellow
         booked = false
         while booked != true do 
-            user_city_from = @prompt.select("What city you located at?") do |menu|
+            user_city_from = @prompt.select("What city you located at?") do |option|
                 City.all.each do |city|
-                    menu.choice name: city.name, value: city
+                    option.choice name: city.name, value: city
                 end
+                option.choice "Return to Main Menu", -> { booked = true }
             end
-            user_city_to = @prompt.select("What city you traveling to?") do |menu|
-                City.all.each do |city|
-                    menu.choice name: city.name, value: city
+            if booked == false
+                user_city_to = @prompt.select("What city you traveling to?") do |option|
+                    City.all.each do |city|
+                        option.choice name: city.name, value: city
+                    end
+                    option.choice "Return to Main Menu", -> { booked = true }
                 end
-            end
-
-            if user_city_from == user_city_to
-                puts "\nYou're too high, #{@user.name}. You already there!\n".red
-            else
-                @user.trips.create(city_from: user_city_from, city_to: user_city_to)
-                puts "\nBooked that trip for you. I gotchu!\n".green
-                booked = true
+                if booked == false
+                    if user_city_from == user_city_to
+                        puts "\nYou're too high, #{@user.name}. You already there!\n".red
+                    else
+                        @user.trips.create(city_from: user_city_from, city_to: user_city_to)
+                        puts "\nBooked that trip for you. I gotchu!\n".green
+                        booked = true
+                    end
+                end
             end
         end
     end
@@ -220,9 +225,11 @@ class CommandLineInterface
             end
         end
         if to_edit == "FROM"
-            chosen_trip.city_from = new_city
+            chosen_trip.city_from = new_city # updates city_from
+            chosen_trip.save # updates DB
         else
-            chosen_trip.city_to = new_city
+            chosen_trip.city_to = new_city # updates city_to
+            chosen_trip.save # updates DB
         end
         puts "\nYou got it, #{@user.name}.\n".green
     end
@@ -255,19 +262,18 @@ class CommandLineInterface
                     @user.trips.each_with_index do |trip, i|
                         option.choice name: "Trip #{i + 1} - FROM: #{trip.city_from.name} TO: #{trip.city_to.name}", value: trip
                     end
+                    option.choice "Return to Main Menu", -> { destroyed = true }
                 end
-                @prompt.select("You sure you wanna cancel this trip?") do |option|
-                    option.choice "Yes", -> { 
-                        pick_delete.destroy # destroy from database
-                        @user.trips.destroy(pick_delete) # destroy from trips
-                        puts "\nIght #{@user.name}. Whatever you say.\n".green
-                        destroyed = true
-                    }
-                    option.choice "No", -> { puts "\nThen what you wanna cancel?\n".yellow }
-                    option.choice "I don't want to cancel any trips", -> { 
-                        puts "\nMake up your mind!\n".yellow
-                        destroyed = true
-                    }
+                if destroyed == false
+                    @prompt.select("You sure you wanna cancel this trip?") do |option|
+                        option.choice "Yes", -> { 
+                            pick_delete.destroy # destroy from database
+                            @user.trips.destroy(pick_delete) # destroy from trips
+                            puts "\nIght #{@user.name}. Whatever you say.\n".green
+                            destroyed = true
+                        }
+                        option.choice "No", -> { puts "\nMake up your mind!\n\nThen what you wanna cancel?\n".yellow }
+                    end
                 end
             end
         end
