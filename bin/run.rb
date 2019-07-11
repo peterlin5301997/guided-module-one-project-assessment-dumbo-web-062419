@@ -5,12 +5,17 @@ require "geocoder"
 require "pry"
 
 class CommandLineInterface
-    attr_reader :user, :trip
+    attr_reader :user
     def initialize
         @prompt = TTY::Prompt.new
         @user = nil
-        pid = fork{ exec 'afplay', "The_Next_Episode_Instrumental.mp3"}
-        puts "                                                  
+        pid = fork{ exec 'afplay', "audio/The_Next_Episode_Instrumental.mp3"}
+        marijuana
+        welcome
+    end
+
+    def marijuana
+    puts "                                                  
                                                         :-                        
                                                         o+                        
                                                        :oo:                       
@@ -34,7 +39,10 @@ class CommandLineInterface
                                                  /oooo/`:.`/oooo/                 
                                                `+ooo/.  ./  ./ooo+`               
                                               `//-.     `+     .-:/`              
-        ".green
+    ".green
+    end
+
+    def welcome
         puts "
         $$\\      $$\\         $$\\                                                 $$\\              
         $$ | $\\  $$ |        $$ |                                                $$ |             
@@ -56,10 +64,9 @@ class CommandLineInterface
                           $$ |     $$ |     $$\\   $$ |                                                                
                           $$ |     $$ |     \\$$$$$$  |                                                                
                           \\__|     \\__|      \\______/                                                                 
-        ".yellow
-        puts "                                                P L A N N I N G    T R I P S    L I K E    Y O U ' R E    H I G H !
         
-        ".green
+        ".yellow
+        puts "                                                P L A N N I N G    T R I P S    L I K E    Y O U ' R E    H I G H !\n\n".green
     end
 
     def account_menu
@@ -70,27 +77,35 @@ class CommandLineInterface
     end
 
     def login
+        puts "===== WELCOME TO LOGIN =====\n\n".yellow
         user_name = @prompt.ask("What is your name?", default: "User")
         user = User.find_by(name: user_name)
         if user == nil # if user does not exist in DB
-            puts "We don't know no #{user_name}. (We do not have a user with that name.)".red
-            register
+            puts "\nWe don't know no #{user_name}. (We do not have a user with that name.)\n".red
+            @prompt.select("You want to be part of the club?") do |option|
+                option.choice "Yes", -> { register }
+                option.choice "No", -> { 
+                    puts "\nGet outta here!\n".red
+                    exit
+                }
+            end
         else
             @user = user
-            puts "Ayy #{@user.name}! How's you been?".green
+            puts "\nAyy #{@user.name}! How's you been?\n".green
         end
     end
 
     def register
+        puts "===== WELCOME TO REGISTER =====\n\n".yellow
         registered = false
         while registered == false
-            user_name = @prompt.ask("Register - What is your name?", default: "User")
+            user_name = @prompt.ask("What is your name?", default: "User")
             user = User.find_by(name: user_name)
             if user != nil # if user exists in DB
-                puts "You ain't no #{user_name}. (Name is taken. Please enter another name.)".red
+                puts "\nYou ain't no #{user_name}. (Name is taken. Please enter another name.)\n".red
             else
                 @user = User.create(name: user_name)
-                puts "Time to get TRIPPY! (Account created!)".green
+                puts "\nTime to get TRIPPY! (Account created!)\n".green
                 registered = true
             end
         end
@@ -105,15 +120,19 @@ class CommandLineInterface
                 menu.choice "Display Trip List", -> { display_trip_list }
                 menu.choice "Cancel Trip", -> { cancel_trip }
                 menu.choice "EXIT", -> { 
-                    puts "Stay safe. Don't trip.".yellow
+                    system "clear"
+                    marijuana
+                    puts "\n\t\t\t\t\t\tStay safe. Don't trip.\n".yellow
                     pid = fork{ exec 'killall', "afplay" }
-                    done = true 
+                    done = true
                 }
             end
         end
     end
 
     def book_trip
+        system "clear"
+        puts "===== BOOK TRIP =====\n\n".yellow
         booked = false
         while booked != true do 
             user_city_from = @prompt.select("What city you located at?") do |menu|
@@ -128,10 +147,10 @@ class CommandLineInterface
             end
 
             if user_city_from == user_city_to
-                puts "You're too high, #{@user.name}. You already there!".yellow
+                puts "\nYou're too high, #{@user.name}. You already there!\n".red
             else
                 @user.trips.create(city_from: user_city_from, city_to: user_city_to)
-                puts "Booked that trip for you. I gotchu!".green
+                puts "\nBooked that trip for you. I gotchu!\n".green
                 booked = true
             end
         end
@@ -146,10 +165,12 @@ class CommandLineInterface
     end
 
     def edit_trip
+        system "clear"
+        puts "===== EDIT TRIP =====\n\n".yellow
         edited = false
         while edited != true do 
             if @user.trips.length == 0
-                puts "You Trippin' Dawg. You Don't Got Any Trips Booked!".red
+                puts "You Trippin' Dawg. You Don't Got Any Trips Booked!\n\n".red
                 edited = true
             else
                 chosen_trip = @prompt.select("Pick a Trip to Modify: ") do |option|
@@ -173,30 +194,33 @@ class CommandLineInterface
                     chosen_trip.city_to = new_city
                     edited = true
                 end
-                puts "You got it, boss."
+                puts "\nYou got it, #{@user.name}.\n".green
             end
         end
     end
 
     def display_trip_list
-        puts "\n\nYou will travel #{total_user_distance} miles".green
+        system "clear"
+        puts "===== DISPLAY TRIPS =====\n\n".yellow
         if @user.trips.length == 0
-            puts "\n\nYou Trippin' Dawg. You Don't Got Any Trips Booked!".red.bold
-            puts "\n\nYou've traveled #{total_user_distance}"
+            puts "You Trippin' Dawg. You Don't Got Any Trips Booked!".red
         else
-            puts "\n\n#{@user.name}".yellow.bold + ", Here's Yo List of Trips: "
+            puts "#{@user.name}".yellow + ", Here's Yo List of Trips:\n\n"
             @user.trips.each_with_index do |trip, i|
-                puts "Trip #{i + 1} - FROM: #{trip.city_from.name} TO: #{trip.city_to.name} - #{trip_distance_miles(trip)} miles".yellow.bold
+                puts "Trip #{i + 1} - FROM: #{trip.city_from.name} TO: #{trip.city_to.name} - #{trip_distance_miles(trip)} miles".yellow
             end
+            puts "\nYou gonna travel #{total_user_distance} miles".green
         end
         puts "\n\n"
     end
     
     def cancel_trip
+        system "clear"
+        puts "===== CANCEL TRIP =====\n\n".yellow
         destroyed = false
         while destroyed != true do
             if @user.trips.length == 0
-                puts "You Trippin' Dawg. You Don't Got Any Trips Booked!".red
+                puts "You Trippin' Dawg. You Don't Got Any Trips Booked!\n\n".red
                 destroyed = true
             else
                 pick_delete = @prompt.select("Pick a Trip to Cancel: ") do |option|
@@ -208,9 +232,14 @@ class CommandLineInterface
                     option.choice "Yes", -> { 
                         pick_delete.destroy # destroy from database
                         @user.trips.destroy(pick_delete) # destroy from trips
+                        puts "\nIght #{@user.name}. Whatever you say.\n".green
                         destroyed = true
                     }
-                    option.choice "No"
+                    option.choice "No", -> { puts "\nThen what you wanna cancel?\n".yellow }
+                    option.choice "I don't want to cancel any trips", -> { 
+                        puts "\nMake up your mind!\n".yellow
+                        destroyed = true
+                    }
                 end
             end
         end
