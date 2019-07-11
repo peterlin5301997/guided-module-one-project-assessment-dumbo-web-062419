@@ -9,7 +9,7 @@ class CommandLineInterface
     def initialize
         @prompt = TTY::Prompt.new
         @user = nil
-        @pid = fork{ exec 'afplay', "audio/The_Next_Episode_Instrumental.mp3"}
+        fork{ exec 'afplay', "audio/The_Next_Episode_Instrumental.mp3"}
         marijuana
         welcome
     end
