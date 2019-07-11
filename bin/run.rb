@@ -9,7 +9,7 @@ class CommandLineInterface
     def initialize
         @prompt = TTY::Prompt.new
         @user = nil
-        pid = fork{ exec 'afplay', "audio/The_Next_Episode_Instrumental.mp3"}
+        @pid = fork{ exec 'afplay', "audio/The_Next_Episode_Instrumental.mp3"}
         marijuana
         welcome
     end
@@ -73,25 +73,38 @@ class CommandLineInterface
         @prompt.select("Please select an option: ") do |option|
             option.choice "Login", -> { login }
             option.choice "Register", -> { register }
+            option.choice "EXIT", -> { 
+                exit_program
+                exit
+            }
         end
     end
 
     def login
         puts "===== WELCOME TO LOGIN =====\n\n".yellow
-        user_name = @prompt.ask("What is your name?", default: "User")
-        user = User.find_by(name: user_name)
-        if user == nil # if user does not exist in DB
-            puts "\nWe don't know no #{user_name}. (We do not have a user with that name.)\n".red
-            @prompt.select("You want to be part of the club?") do |option|
-                option.choice "Yes", -> { register }
-                option.choice "No", -> { 
-                    puts "\nGet outta here!\n".red
-                    exit
-                }
+        logged_in = false
+        while logged_in == false
+            user_name = @prompt.ask("What is your name?", default: "User")
+            user = User.find_by(name: user_name)
+            if user == nil # if user does not exist in DB
+                puts "\nWe don't know no #{user_name}. (We do not have a user with that name.)\n".red
+                @prompt.select("You want to be part of the club?") do |option|
+                    option.choice "Yes", -> { 
+                        register
+                        logged_in = true
+                    }
+                    option.choice "No", -> { 
+                        puts "\nGet outta here!\n".red
+                        fork{ exec 'killall', "afplay"}
+                        exit
+                    }
+                    option.choice "I'm actually someone else"
+                end
+            else
+                @user = user
+                puts "\nAyy #{@user.name}! How's you been?\n".green
+                logged_in = true
             end
-        else
-            @user = user
-            puts "\nAyy #{@user.name}! How's you been?\n".green
         end
     end
 
@@ -120,10 +133,7 @@ class CommandLineInterface
                 menu.choice "Display Trip List", -> { display_trip_list }
                 menu.choice "Cancel Trip", -> { cancel_trip }
                 menu.choice "EXIT", -> { 
-                    system "clear"
-                    marijuana
-                    puts "\n\t\t\t\t\t\tStay safe. Don't trip.\n".yellow
-                    pid = fork{ exec 'killall', "afplay" }
+                    exit_program
                     done = true
                 }
             end
@@ -168,7 +178,7 @@ class CommandLineInterface
         system "clear"
         puts "===== EDIT TRIP =====\n\n".yellow
         edited = false
-        while edited != true do 
+        while edited != true do
             if @user.trips.length == 0
                 puts "You Trippin' Dawg. You Don't Got Any Trips Booked!\n\n".red
                 edited = true
@@ -177,26 +187,44 @@ class CommandLineInterface
                     @user.trips.each_with_index do |trip, i|
                         option.choice name: "Trip #{i + 1} - FROM: #{trip.city_from.name} TO: #{trip.city_to.name}", value: trip
                     end 
+                    option.choice "Return to Main Menu", -> { edited = true }
                 end
-                to_edit = @prompt.select("What you wanna change?") do |option|
-                    option.choice name: "FROM: #{chosen_trip.city_from.name}", value: "FROM"
-                    option.choice name: "TO: #{chosen_trip.city_to.name}", value: "TO"
+
+                if edited == false
+                    edited = edit_chosen_trip(chosen_trip)
                 end
-                new_city = @prompt.select("Choose your new city") do |option|
-                    City.all.each do |city|
-                        option.choice name: city.name, value: city
-                    end
-                end
-                if to_edit == "FROM"
-                    chosen_trip.city_from = new_city
-                    edited = true
-                else
-                    chosen_trip.city_to = new_city
-                    edited = true
-                end
-                puts "\nYou got it, #{@user.name}.\n".green
             end
         end
+    end
+
+    def edit_chosen_trip(chosen_trip)
+        did_edit = false
+        @prompt.select("What you wanna change?") do |option|
+            option.choice "FROM: #{chosen_trip.city_from.name}", -> { 
+                choosing_city_to_edit("FROM", chosen_trip) 
+                did_edit = true
+            }
+            option.choice "TO: #{chosen_trip.city_to.name}", -> { 
+                choosing_city_to_edit("TO", chosen_trip) 
+                did_edit = true
+            }
+            option.choice "Go Back", -> {}
+        end
+        did_edit
+    end
+
+    def choosing_city_to_edit(to_edit, chosen_trip)
+        new_city = @prompt.select("Choose your new city") do |option|
+            City.all.each do |city|
+                option.choice name: city.name, value: city
+            end
+        end
+        if to_edit == "FROM"
+            chosen_trip.city_from = new_city
+        else
+            chosen_trip.city_to = new_city
+        end
+        puts "\nYou got it, #{@user.name}.\n".green
     end
 
     def display_trip_list
@@ -243,6 +271,16 @@ class CommandLineInterface
                 end
             end
         end
+    end
+
+    def exit_program
+        system "clear"
+        marijuana
+        puts "\n\t\t\t\t\t\tStay safe. Don't trip.\n".yellow
+        fork{ exec 'killall', "afplay" }
+        sleep(0.1.seconds)
+        fork{ exec 'afplay', "audio/Smoke_Weed_Everyday.mp3"}
+        sleep(2.seconds)
     end
 
 end
