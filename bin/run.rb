@@ -241,15 +241,18 @@ class CommandLineInterface
                 option.choice name: city.name, value: city
             end
         end
-        if to_edit == "FROM"
+
+        if new_city == chosen_trip.city_from || new_city == chosen_trip.city_to
+            puts "\nYou're too high, #{@user.name}. You already there!\n".red
+        elsif to_edit == "FROM"
             chosen_trip.city_from = new_city # updates city_from
             chosen_trip.save # updates DB
+            puts "\nYou got it, #{@user.name}.\n".green
         else
             chosen_trip.city_to = new_city # updates city_to
             chosen_trip.save # updates DB
+            puts "\nYou got it, #{@user.name}.\n".green
         end
-        chosen_trip.save
-        puts "\nYou got it, #{@user.name}.\n".green
     end
 
     def display_trip_list
