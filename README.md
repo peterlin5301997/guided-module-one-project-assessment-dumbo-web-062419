@@ -9,8 +9,15 @@ Make sure to 'bundle install' in your Terminal before running any other files.
 ### Background Music ###
 
 ** WARNING **
-Headphone users: 
--- Please Beware of Loud Music Playing --
+
+Headphone Users: 
+
+-- Please Beware of LOUD Music Playing --
+
+Users: 
+
+-- Please Beware of EARWORM --
+-- You Will Sing, Hum, and Dance to This Song the Rest of Your Day --
 
 ### DISCLAIMER ###
 
